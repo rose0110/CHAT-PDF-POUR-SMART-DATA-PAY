@@ -5,7 +5,10 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 
 // Configuration du worker PDF.js
-pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.worker.min.js';
+pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+  'node_modules/pdfjs-dist/build/pdf.worker.min.mjs',
+  import.meta.url
+).href;
 
 interface PdfViewerProps {
   url: string;
@@ -23,7 +26,7 @@ export default function PdfViewer({ url }: PdfViewerProps) {
         console.log('Chargement du PDF:', url);
         const loadingTask = pdfjsLib.getDocument(url);
 
-        loadingTask.onProgress = (progress) => {
+        loadingTask.onProgress = (progress: { loaded: number; total: number }) => {
           console.log('Progression:', Math.round(progress.loaded / progress.total * 100), '%');
         };
 
