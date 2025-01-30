@@ -40,12 +40,14 @@ export default function PdfViewer({ url }: PdfViewerProps) {
             </a>
           </Button>
         </div>
-        <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.worker.min.js">
-          <Viewer
-            fileUrl={url}
-            plugins={[defaultLayoutPluginInstance]}
-            onError={() => setError(true)}
-          />
+        <Worker workerUrl={`https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.worker.min.js`}>
+          <div style={{ height: '100%' }}>
+            <Viewer
+              fileUrl={url}
+              plugins={[defaultLayoutPluginInstance]}
+              onError={() => setError(true)}
+            />
+          </div>
         </Worker>
       </div>
     </Card>
