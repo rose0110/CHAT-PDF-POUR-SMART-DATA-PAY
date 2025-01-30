@@ -1,80 +1,19 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Card } from '@/components/ui/card';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { FileDown } from 'lucide-react';
-import * as pdfjsLib from 'pdfjs-dist';
-
-// Configurer le worker PDF.js
-const pdfWorkerSrc = new URL(
-  'pdfjs-dist/build/pdf.worker.min.js',
-  import.meta.url,
-).toString();
-
-pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerSrc;
+import { Worker, Viewer } from '@react-pdf-viewer/core';
+import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
+import '@react-pdf-viewer/core/lib/styles/index.css';
+import '@react-pdf-viewer/default-layout/lib/styles/index.css';
 
 interface PdfViewerProps {
   url: string;
 }
 
-interface PageContent {
-  text: string;
-  pageNumber: number;
-}
-
 export default function PdfViewer({ url }: PdfViewerProps) {
-  const { toast } = useToast();
+  const defaultLayoutPluginInstance = defaultLayoutPlugin();
   const [error, setError] = useState(false);
-  const [pages, setPages] = useState<PageContent[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function loadPDF() {
-      try {
-        setLoading(true);
-        setError(false);
-
-        // Charger le PDF
-        const loadingTask = pdfjsLib.getDocument({
-          url: url,
-          cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.4.120/cmaps/',
-          cMapPacked: true,
-        });
-
-        const pdf = await loadingTask.promise;
-        const pagesContent: PageContent[] = [];
-
-        // Extraire le texte de chaque page
-        for (let i = 1; i <= pdf.numPages; i++) {
-          const page = await pdf.getPage(i);
-          const textContent = await page.getTextContent();
-          const pageText = textContent.items
-            .map((item: any) => item.str)
-            .join(' ');
-
-          pagesContent.push({
-            text: pageText,
-            pageNumber: i
-          });
-        }
-
-        setPages(pagesContent);
-        setLoading(false);
-      } catch (err) {
-        console.error('Error loading PDF:', err);
-        setError(true);
-        setLoading(false);
-        toast({
-          title: "Erreur de chargement",
-          description: "Impossible de charger le contenu du PDF. Vous pouvez le télécharger pour le visualiser.",
-          variant: "destructive"
-        });
-      }
-    }
-
-    loadPDF();
-  }, [url, toast]);
 
   if (error) {
     return (
@@ -90,36 +29,25 @@ export default function PdfViewer({ url }: PdfViewerProps) {
     );
   }
 
-  if (loading) {
-    return (
-      <Card className="flex-1 flex items-center justify-center">
-        <p>Chargement du PDF...</p>
-      </Card>
-    );
-  }
-
   return (
-    <Card className="flex-1 overflow-hidden">
-      <ScrollArea className="h-full">
-        <div className="relative">
-          <div className="sticky top-4 right-4 flex justify-end gap-2 p-4 bg-background/80 backdrop-blur z-10">
-            <Button asChild variant="outline" size="sm">
-              <a href={url} download>
-                <FileDown className="h-4 w-4 mr-2" />
-                Télécharger
-              </a>
-            </Button>
-          </div>
-          <div className="p-6 space-y-8">
-            {pages.map((page) => (
-              <div key={page.pageNumber} className="prose max-w-none">
-                <h2 className="text-lg font-semibold mb-4">Page {page.pageNumber}</h2>
-                <div className="whitespace-pre-wrap">{page.text}</div>
-              </div>
-            ))}
-          </div>
+    <Card className="flex-1">
+      <div className="h-screen">
+        <div className="absolute top-4 right-4 z-50">
+          <Button asChild variant="outline" size="sm">
+            <a href={url} download>
+              <FileDown className="h-4 w-4 mr-2" />
+              Télécharger
+            </a>
+          </Button>
         </div>
-      </ScrollArea>
+        <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.worker.min.js">
+          <Viewer
+            fileUrl={url}
+            plugins={[defaultLayoutPluginInstance]}
+            onError={() => setError(true)}
+          />
+        </Worker>
+      </div>
     </Card>
   );
 }
