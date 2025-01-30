@@ -5,13 +5,8 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Send } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
-import { askQuestion } from '@/lib/perplexity';
+import { analyzeDocument, type Citation } from '@/lib/deepseek';
 import type { PdfViewerRef } from './pdf-viewer';
-
-interface Citation {
-  text: string;
-  page: number;
-}
 
 interface Message {
   role: 'user' | 'assistant';
@@ -31,7 +26,7 @@ export default function ChatInterface({ pdfText, enabled, pdfViewerRef }: ChatIn
 
   const mutation = useMutation({
     mutationFn: async (question: string) => {
-      return askQuestion(question, pdfText, messages);
+      return analyzeDocument(question, pdfText, messages);
     },
     onSuccess: (data) => {
       setMessages(prev => [...prev, 
@@ -39,10 +34,7 @@ export default function ChatInterface({ pdfText, enabled, pdfViewerRef }: ChatIn
         { 
           role: 'assistant', 
           content: data.content,
-          citations: data.citations?.map(citation => ({
-            text: citation,
-            page: extractPageNumber(citation)
-          }))
+          citations: data.citations
         }
       ]);
       setInput('');
@@ -59,13 +51,6 @@ export default function ChatInterface({ pdfText, enabled, pdfViewerRef }: ChatIn
     if (pdfViewerRef.current) {
       pdfViewerRef.current.jumpToPage(page);
     }
-  };
-
-  // Fonction pour extraire le numéro de page d'une citation
-  const extractPageNumber = (citation: string): number => {
-    // On suppose que la citation contient "page X" ou "p. X"
-    const match = citation.match(/page\s*(\d+)|p\.\s*(\d+)/i);
-    return match ? parseInt(match[1] || match[2]) : 1;
   };
 
   return (
@@ -87,7 +72,7 @@ export default function ChatInterface({ pdfText, enabled, pdfViewerRef }: ChatIn
                 }`}
               >
                 <p>{message.content}</p>
-                {message.citations && (
+                {message.citations && message.citations.length > 0 && (
                   <div className="mt-2 text-sm space-y-1">
                     {message.citations.map((citation, idx) => (
                       <button
