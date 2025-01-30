@@ -19,12 +19,13 @@ export default function PdfViewer({ url }: PdfViewerProps) {
   const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
-    let pdf: typeof pdfjsLib.PDFDocumentProxy | null = null;
+    let pdf: any = null;
 
     async function renderPage(pageNum: number) {
       if (!pdf || !canvasRef.current) return;
 
       try {
+        console.log('Rendering page', pageNum);
         const page = await pdf.getPage(pageNum);
         const canvas = canvasRef.current;
         const context = canvas.getContext('2d');
@@ -34,21 +35,37 @@ export default function PdfViewer({ url }: PdfViewerProps) {
         canvas.height = viewport.height;
         canvas.width = viewport.width;
 
-        await page.render({
+        const renderContext = {
           canvasContext: context,
           viewport: viewport
-        }).promise;
+        };
+
+        try {
+          await page.render(renderContext).promise;
+          console.log('Page rendered successfully');
+        } catch (renderError) {
+          console.error('Error during page rendering:', renderError);
+          setError(true);
+        }
       } catch (err) {
-        console.error('Error rendering page:', err);
+        console.error('Error in renderPage:', err);
         setError(true);
       }
     }
 
     async function loadPDF() {
       try {
+        console.log('Loading PDF from URL:', url);
         setError(false);
-        const loadingTask = pdfjsLib.getDocument(url);
+
+        const loadingTask = pdfjsLib.getDocument({
+          url: url,
+          cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.4.120/cmaps/',
+          cMapPacked: true,
+        });
+
         pdf = await loadingTask.promise;
+        console.log('PDF loaded successfully, pages:', pdf.numPages);
         setNumPages(pdf.numPages);
         await renderPage(currentPage);
       } catch (err) {
@@ -65,7 +82,9 @@ export default function PdfViewer({ url }: PdfViewerProps) {
     loadPDF();
 
     return () => {
-      pdf?.destroy();
+      if (pdf) {
+        pdf.destroy();
+      }
     };
   }, [url, scale, currentPage, toast]);
 
