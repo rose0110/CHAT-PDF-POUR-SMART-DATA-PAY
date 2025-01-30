@@ -5,9 +5,14 @@ import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { FileDown } from 'lucide-react';
 import * as pdfjsLib from 'pdfjs-dist';
-import { GlobalWorkerOptions } from 'pdfjs-dist';
 
-GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+// Configurer le worker PDF.js
+const pdfWorkerSrc = new URL(
+  'pdfjs-dist/build/pdf.worker.min.js',
+  import.meta.url,
+).toString();
+
+pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerSrc;
 
 interface PdfViewerProps {
   url: string;
@@ -29,9 +34,18 @@ export default function PdfViewer({ url }: PdfViewerProps) {
       try {
         setLoading(true);
         setError(false);
-        const pdf = await pdfjsLib.getDocument(url).promise;
+
+        // Charger le PDF
+        const loadingTask = pdfjsLib.getDocument({
+          url: url,
+          cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.4.120/cmaps/',
+          cMapPacked: true,
+        });
+
+        const pdf = await loadingTask.promise;
         const pagesContent: PageContent[] = [];
 
+        // Extraire le texte de chaque page
         for (let i = 1; i <= pdf.numPages; i++) {
           const page = await pdf.getPage(i);
           const textContent = await page.getTextContent();
