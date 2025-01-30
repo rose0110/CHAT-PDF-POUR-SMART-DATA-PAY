@@ -4,9 +4,9 @@ import * as pdfjsLib from 'pdfjs-dist';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 
-// Configuration du worker PDF.js avec un worker factice en cas d'erreur
+// Configuration du worker PDF.js.  Using an empty string consistently as a temporary workaround.
 try {
-  pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
+  pdfjsLib.GlobalWorkerOptions.workerSrc = '';
 } catch (error) {
   console.warn('Warning: Setting up fake worker.');
   pdfjsLib.GlobalWorkerOptions.workerSrc = '';
