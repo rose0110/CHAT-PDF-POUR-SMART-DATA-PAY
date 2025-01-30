@@ -4,11 +4,13 @@ import * as pdfjsLib from 'pdfjs-dist';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 
-// Configuration du worker PDF.js
-pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-  'node_modules/pdfjs-dist/build/pdf.worker.min.mjs',
-  import.meta.url
-).href;
+// Configuration du worker PDF.js avec un worker factice en cas d'erreur
+try {
+  pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
+} catch (error) {
+  console.warn('Warning: Setting up fake worker.');
+  pdfjsLib.GlobalWorkerOptions.workerSrc = '';
+}
 
 interface PdfViewerProps {
   url: string;
