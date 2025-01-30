@@ -39,25 +39,13 @@ export default function PdfViewer({ url }: PdfViewerProps) {
               </a>
             </Button>
           </div>
-          <object
-            data={url}
+          <embed 
+            src={url}
             type="application/pdf"
-            className="w-full h-screen"
-            onError={() => {
-              setError(true);
-              toast({
-                title: "Erreur de chargement",
-                description: "Impossible d'afficher le PDF dans le navigateur. Vous pouvez le télécharger pour le visualiser.",
-                variant: "destructive"
-              });
-            }}
-          >
-            <p>Votre navigateur ne peut pas afficher le PDF directement. 
-              <Button asChild variant="link" className="px-2">
-                <a href={url} download>Cliquez ici pour le télécharger</a>
-              </Button>
-            </p>
-          </object>
+            width="100%"
+            height="100vh"
+            className="border-none"
+          />
         </div>
       </ScrollArea>
     </Card>
