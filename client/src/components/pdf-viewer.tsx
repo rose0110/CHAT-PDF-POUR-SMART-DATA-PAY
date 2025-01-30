@@ -1,10 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { FileDown } from 'lucide-react';
-import { pdfjsLib } from '@/lib/pdf-worker';
 
 interface PdfViewerProps {
   url: string;
@@ -13,80 +12,6 @@ interface PdfViewerProps {
 export default function PdfViewer({ url }: PdfViewerProps) {
   const { toast } = useToast();
   const [error, setError] = useState(false);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [scale, setScale] = useState(1.5);
-  const [numPages, setNumPages] = useState(0);
-  const [currentPage, setCurrentPage] = useState(1);
-
-  useEffect(() => {
-    let pdf: any = null;
-
-    async function renderPage(pageNum: number) {
-      if (!pdf || !canvasRef.current) return;
-
-      try {
-        console.log('Rendering page', pageNum);
-        const page = await pdf.getPage(pageNum);
-        const canvas = canvasRef.current;
-        const context = canvas.getContext('2d');
-        if (!context) return;
-
-        const viewport = page.getViewport({ scale });
-        canvas.height = viewport.height;
-        canvas.width = viewport.width;
-
-        const renderContext = {
-          canvasContext: context,
-          viewport: viewport
-        };
-
-        try {
-          await page.render(renderContext).promise;
-          console.log('Page rendered successfully');
-        } catch (renderError) {
-          console.error('Error during page rendering:', renderError);
-          setError(true);
-        }
-      } catch (err) {
-        console.error('Error in renderPage:', err);
-        setError(true);
-      }
-    }
-
-    async function loadPDF() {
-      try {
-        console.log('Loading PDF from URL:', url);
-        setError(false);
-
-        const loadingTask = pdfjsLib.getDocument({
-          url: url,
-          cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.4.120/cmaps/',
-          cMapPacked: true,
-        });
-
-        pdf = await loadingTask.promise;
-        console.log('PDF loaded successfully, pages:', pdf.numPages);
-        setNumPages(pdf.numPages);
-        await renderPage(currentPage);
-      } catch (err) {
-        console.error('Error loading PDF:', err);
-        setError(true);
-        toast({
-          title: "Erreur de chargement",
-          description: "Impossible d'afficher le PDF dans le navigateur. Vous pouvez le télécharger pour le visualiser.",
-          variant: "destructive"
-        });
-      }
-    }
-
-    loadPDF();
-
-    return () => {
-      if (pdf) {
-        pdf.destroy();
-      }
-    };
-  }, [url, scale, currentPage, toast]);
 
   if (error) {
     return (
@@ -105,22 +30,8 @@ export default function PdfViewer({ url }: PdfViewerProps) {
   return (
     <Card className="flex-1 overflow-hidden">
       <ScrollArea className="h-full">
-        <div className="relative min-h-screen p-4">
-          <div className="sticky top-4 right-4 flex justify-end gap-2 mb-4">
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => setScale(prev => prev + 0.2)}
-            >
-              Zoom +
-            </Button>
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => setScale(prev => Math.max(0.5, prev - 0.2))}
-            >
-              Zoom -
-            </Button>
+        <div className="relative min-h-screen">
+          <div className="sticky top-4 right-4 flex justify-end gap-2 p-4 bg-background/80 backdrop-blur z-10">
             <Button asChild variant="outline" size="sm">
               <a href={url} download>
                 <FileDown className="h-4 w-4 mr-2" />
@@ -128,32 +39,18 @@ export default function PdfViewer({ url }: PdfViewerProps) {
               </a>
             </Button>
           </div>
-          <div className="flex justify-center">
-            <canvas ref={canvasRef} className="shadow-lg" />
-          </div>
-          {numPages > 1 && (
-            <div className="flex justify-center gap-2 mt-4">
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={currentPage <= 1}
-                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-              >
-                Page précédente
-              </Button>
-              <span className="py-2">
-                Page {currentPage} sur {numPages}
-              </span>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={currentPage >= numPages}
-                onClick={() => setCurrentPage(prev => Math.min(numPages, prev + 1))}
-              >
-                Page suivante
-              </Button>
-            </div>
-          )}
+          <iframe
+            src={url}
+            className="w-full h-screen border-none"
+            onError={() => {
+              setError(true);
+              toast({
+                title: "Erreur de chargement",
+                description: "Impossible d'afficher le PDF dans le navigateur. Vous pouvez le télécharger pour le visualiser.",
+                variant: "destructive"
+              });
+            }}
+          />
         </div>
       </ScrollArea>
     </Card>
