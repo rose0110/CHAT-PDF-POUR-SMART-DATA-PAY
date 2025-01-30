@@ -4,9 +4,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { FileDown } from 'lucide-react';
-import * as pdfjsLib from 'pdfjs-dist';
-
-pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+import { pdfjsLib } from '@/lib/pdf-worker';
 
 interface PdfViewerProps {
   url: string;
@@ -21,24 +19,29 @@ export default function PdfViewer({ url }: PdfViewerProps) {
   const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
-    let pdf: pdfjsLib.PDFDocumentProxy | null = null;
+    let pdf: typeof pdfjsLib.PDFDocumentProxy | null = null;
 
     async function renderPage(pageNum: number) {
       if (!pdf || !canvasRef.current) return;
 
-      const page = await pdf.getPage(pageNum);
-      const canvas = canvasRef.current;
-      const context = canvas.getContext('2d');
-      if (!context) return;
+      try {
+        const page = await pdf.getPage(pageNum);
+        const canvas = canvasRef.current;
+        const context = canvas.getContext('2d');
+        if (!context) return;
 
-      const viewport = page.getViewport({ scale });
-      canvas.height = viewport.height;
-      canvas.width = viewport.width;
+        const viewport = page.getViewport({ scale });
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
 
-      await page.render({
-        canvasContext: context,
-        viewport: viewport
-      }).promise;
+        await page.render({
+          canvasContext: context,
+          viewport: viewport
+        }).promise;
+      } catch (err) {
+        console.error('Error rendering page:', err);
+        setError(true);
+      }
     }
 
     async function loadPDF() {
@@ -49,6 +52,7 @@ export default function PdfViewer({ url }: PdfViewerProps) {
         setNumPages(pdf.numPages);
         await renderPage(currentPage);
       } catch (err) {
+        console.error('Error loading PDF:', err);
         setError(true);
         toast({
           title: "Erreur de chargement",
