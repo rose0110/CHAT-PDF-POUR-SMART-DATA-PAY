@@ -6,19 +6,26 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Send } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
 import { askQuestion } from '@/lib/perplexity';
+import type { PdfViewerRef } from './pdf-viewer';
+
+interface Citation {
+  text: string;
+  page: number;
+}
 
 interface Message {
   role: 'user' | 'assistant';
   content: string;
-  citations?: string[];
+  citations?: Citation[];
 }
 
 interface ChatInterfaceProps {
   pdfText: string;
   enabled: boolean;
+  pdfViewerRef: React.RefObject<PdfViewerRef>;
 }
 
-export default function ChatInterface({ pdfText, enabled }: ChatInterfaceProps) {
+export default function ChatInterface({ pdfText, enabled, pdfViewerRef }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
 
@@ -32,7 +39,10 @@ export default function ChatInterface({ pdfText, enabled }: ChatInterfaceProps) 
         { 
           role: 'assistant', 
           content: data.content,
-          citations: data.citations 
+          citations: data.citations?.map(citation => ({
+            text: citation,
+            page: extractPageNumber(citation)
+          }))
         }
       ]);
       setInput('');
@@ -43,6 +53,19 @@ export default function ChatInterface({ pdfText, enabled }: ChatInterfaceProps) 
     e.preventDefault();
     if (!input.trim() || !enabled) return;
     mutation.mutate(input);
+  };
+
+  const handleCitationClick = (page: number) => {
+    if (pdfViewerRef.current) {
+      pdfViewerRef.current.jumpToPage(page);
+    }
+  };
+
+  // Fonction pour extraire le numéro de page d'une citation
+  const extractPageNumber = (citation: string): number => {
+    // On suppose que la citation contient "page X" ou "p. X"
+    const match = citation.match(/page\s*(\d+)|p\.\s*(\d+)/i);
+    return match ? parseInt(match[1] || match[2]) : 1;
   };
 
   return (
@@ -67,9 +90,13 @@ export default function ChatInterface({ pdfText, enabled }: ChatInterfaceProps) 
                 {message.citations && (
                   <div className="mt-2 text-sm space-y-1">
                     {message.citations.map((citation, idx) => (
-                      <div key={idx} className="text-blue-500 cursor-pointer">
-                        Source {idx + 1}
-                      </div>
+                      <button
+                        key={idx}
+                        onClick={() => handleCitationClick(citation.page)}
+                        className="text-blue-500 hover:text-blue-700 underline cursor-pointer block text-left"
+                      >
+                        Voir la source (page {citation.page})
+                      </button>
                     ))}
                   </div>
                 )}
@@ -84,7 +111,7 @@ export default function ChatInterface({ pdfText, enabled }: ChatInterfaceProps) 
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder={enabled ? "Ask a question..." : "Upload a PDF first"}
+            placeholder={enabled ? "Posez votre question..." : "Chargez un PDF d'abord"}
             disabled={!enabled || mutation.isPending}
           />
           <Button type="submit" disabled={!enabled || mutation.isPending}>

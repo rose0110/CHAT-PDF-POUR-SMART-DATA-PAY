@@ -1,13 +1,14 @@
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
-import PdfViewer from "@/components/pdf-viewer";
+import PdfViewer, { PdfViewerRef } from "@/components/pdf-viewer";
 import ChatInterface from "@/components/chat-interface";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import FileUpload from "@/components/file-upload";
 import { Card } from "@/components/ui/card";
 
 export default function Home() {
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [pdfText, setPdfText] = useState<string>("");
+  const pdfViewerRef = useRef<PdfViewerRef>(null);
 
   return (
     <div className="h-screen w-full bg-background">
@@ -19,19 +20,23 @@ export default function Home() {
               setPdfText(text);
             }} />
             {pdfUrl ? (
-              <PdfViewer url={pdfUrl} />
+              <PdfViewer url={pdfUrl} ref={pdfViewerRef} />
             ) : (
               <Card className="flex-1 flex items-center justify-center text-muted-foreground">
-                Upload a PDF to get started
+                Chargez un PDF pour commencer
               </Card>
             )}
           </div>
         </ResizablePanel>
-        
+
         <ResizableHandle />
-        
+
         <ResizablePanel defaultSize={50} minSize={30}>
-          <ChatInterface pdfText={pdfText} enabled={!!pdfUrl} />
+          <ChatInterface 
+            pdfText={pdfText} 
+            enabled={!!pdfUrl}
+            pdfViewerRef={pdfViewerRef}
+          />
         </ResizablePanel>
       </ResizablePanelGroup>
     </div>
