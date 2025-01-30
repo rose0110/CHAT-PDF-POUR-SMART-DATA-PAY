@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Upload } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { extractTextFromPdf } from '@/lib/pdf-utils';
 
 interface FileUploadProps {
   onFileUpload: (url: string, text: string) => void;
@@ -51,11 +52,19 @@ export default function FileUpload({ onFileUpload }: FileUploadProps) {
       }
 
       const data = await response.json();
-      onFileUpload(data.url, ''); // Le texte sera géré plus tard si nécessaire
+
+      // Extraction du texte du PDF
+      const { text } = await extractTextFromPdf(data.url);
+      onFileUpload(data.url, text);
+
+      toast({
+        title: "PDF téléchargé avec succès",
+        description: "Le texte a été extrait et est prêt pour l'analyse",
+      });
     } catch (error) {
       toast({
         title: "Erreur",
-        description: "Impossible de télécharger le fichier PDF",
+        description: "Impossible de télécharger ou d'extraire le texte du PDF",
         variant: "destructive"
       });
     }
