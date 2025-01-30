@@ -3,7 +3,11 @@ import { Card } from '@/components/ui/card';
 import * as pdfjsLib from 'pdfjs-dist';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+// Set worker path to local build
+pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+  'pdfjs-dist/build/pdf.worker.min.js',
+  import.meta.url,
+).href;
 
 interface PdfViewerProps {
   url: string;
