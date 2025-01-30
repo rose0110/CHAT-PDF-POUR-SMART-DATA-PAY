@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
@@ -26,9 +26,10 @@ export default function PdfViewer({ url }: PdfViewerProps) {
   return (
     <Card className="flex-1 overflow-hidden">
       <ScrollArea className="h-full">
-        <iframe
-          src={url}
-          className="w-full h-screen border-0"
+        <object
+          data={url}
+          type="application/pdf"
+          className="w-full h-screen"
           onError={() => {
             setError(true);
             toast({
@@ -37,7 +38,11 @@ export default function PdfViewer({ url }: PdfViewerProps) {
               variant: "destructive"
             });
           }}
-        />
+        >
+          <div className="flex items-center justify-center p-4 text-muted-foreground">
+            <p>Si le PDF ne s'affiche pas, <a href={url} target="_blank" rel="noopener noreferrer" className="text-primary">cliquez ici pour l'ouvrir</a></p>
+          </div>
+        </object>
       </ScrollArea>
     </Card>
   );
