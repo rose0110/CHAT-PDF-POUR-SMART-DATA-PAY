@@ -1,11 +1,13 @@
 import { Button } from '@/components/ui/button';
 import { Upload } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import * as pdfjsLib from 'pdfjs-dist';
 
 interface FileUploadProps {
   onFileUpload: (url: string, text: string) => void;
 }
+
+// Taille maximale du fichier en Mo
+const MAX_FILE_SIZE = 5;
 
 export default function FileUpload({ onFileUpload }: FileUploadProps) {
   const { toast } = useToast();
@@ -14,10 +16,22 @@ export default function FileUpload({ onFileUpload }: FileUploadProps) {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Vérification du type de fichier
     if (file.type !== 'application/pdf') {
       toast({
-        title: "Invalid file type",
-        description: "Please upload a PDF file",
+        title: "Type de fichier invalide",
+        description: "Veuillez télécharger un fichier PDF",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Vérification de la taille du fichier
+    const fileSizeInMB = file.size / (1024 * 1024);
+    if (fileSizeInMB > MAX_FILE_SIZE) {
+      toast({
+        title: "Fichier trop volumineux",
+        description: `La taille du fichier doit être inférieure à ${MAX_FILE_SIZE} Mo`,
         variant: "destructive"
       });
       return;
@@ -25,23 +39,12 @@ export default function FileUpload({ onFileUpload }: FileUploadProps) {
 
     try {
       const url = URL.createObjectURL(file);
-      const pdf = await pdfjsLib.getDocument(url).promise;
-      let fullText = '';
-      
-      for (let i = 1; i <= pdf.numPages; i++) {
-        const page = await pdf.getPage(i);
-        const textContent = await page.getTextContent();
-        const pageText = textContent.items
-          .map((item: any) => item.str)
-          .join(' ');
-        fullText += pageText + ' ';
-      }
-
-      onFileUpload(url, fullText);
+      // Pour l'instant, on envoie juste le texte vide car nous n'utilisons plus pdfjsLib ici
+      onFileUpload(url, '');
     } catch (error) {
       toast({
-        title: "Error loading PDF",
-        description: "There was an error loading your PDF file",
+        title: "Erreur",
+        description: "Impossible de charger le fichier PDF",
         variant: "destructive"
       });
     }
@@ -52,7 +55,7 @@ export default function FileUpload({ onFileUpload }: FileUploadProps) {
       <Button asChild>
         <label className="cursor-pointer">
           <Upload className="h-4 w-4 mr-2" />
-          Upload PDF
+          Télécharger un PDF (max {MAX_FILE_SIZE} Mo)
           <input
             type="file"
             className="hidden"
