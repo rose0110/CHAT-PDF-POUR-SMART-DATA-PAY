@@ -8,6 +8,8 @@ import { useMutation } from '@tanstack/react-query';
 import { analyzeDocument, type Citation } from '@/lib/openai';
 import { useToast } from '@/hooks/use-toast';
 import type { PdfViewerRef } from './pdf-viewer';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -35,11 +37,16 @@ export default function ChatInterface({ pdfText, enabled, pdfViewerRef }: ChatIn
       })));
     },
     onSuccess: (data) => {
+      // Formater le contenu pour inclure les citations avec markdown
+      const formattedContent = data.content + "\n\n" + (data.citations?.map(citation => 
+        `> 📄 [Page ${citation.page}](#page-${citation.page})\n> ${citation.text}`
+      ).join("\n\n") || "");
+
       setMessages(prev => [...prev, 
         { role: 'user', content: input },
         { 
           role: 'assistant', 
-          content: data.content,
+          content: formattedContent,
           citations: data.citations
         }
       ]);
@@ -102,23 +109,27 @@ export default function ChatInterface({ pdfText, enabled, pdfViewerRef }: ChatIn
                     : 'bg-muted'
                 }`}
               >
-                <p className="whitespace-pre-wrap">{message.content}</p>
-                {message.citations && message.citations.length > 0 && (
-                  <div className="mt-2 text-sm space-y-1">
-                    <p className="font-medium text-xs text-muted-foreground mb-1">
-                      Sources :
-                    </p>
-                    {message.citations.map((citation, idx) => (
-                      <button
-                        key={idx}
-                        onClick={() => handleCitationClick(citation.page)}
-                        className="text-blue-500 hover:text-blue-700 underline cursor-pointer block text-left"
-                      >
-                        Voir la source (page {citation.page})
-                      </button>
-                    ))}
-                  </div>
-                )}
+                <ReactMarkdown 
+                  remarkPlugins={[remarkGfm]}
+                  components={{
+                    a: ({ href, children }) => {
+                      if (href?.startsWith('#page-')) {
+                        const page = parseInt(href.replace('#page-', ''));
+                        return (
+                          <button
+                            onClick={() => handleCitationClick(page)}
+                            className="text-blue-500 hover:text-blue-700 underline cursor-pointer"
+                          >
+                            {children}
+                          </button>
+                        );
+                      }
+                      return <a href={href}>{children}</a>;
+                    }
+                  }}
+                >
+                  {message.content}
+                </ReactMarkdown>
               </div>
             </div>
           ))}
