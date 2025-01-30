@@ -22,7 +22,7 @@ export default function PdfViewer({ url }: PdfViewerProps) {
       <Card className="flex-1 flex items-center justify-center flex-col gap-4 p-4">
         <p className="text-destructive">Erreur lors du chargement du PDF</p>
         <Button asChild variant="outline">
-          <a href={url} download target="_blank" rel="noopener noreferrer">
+          <a href={url} download>
             <FileDown className="h-4 w-4 mr-2" />
             Télécharger le PDF
           </a>
@@ -50,7 +50,7 @@ export default function PdfViewer({ url }: PdfViewerProps) {
           />
           <div className="absolute top-4 right-4">
             <Button asChild variant="outline" size="sm">
-              <a href={url} download target="_blank" rel="noopener noreferrer">
+              <a href={url} download>
                 <FileDown className="h-4 w-4 mr-2" />
                 Télécharger
               </a>

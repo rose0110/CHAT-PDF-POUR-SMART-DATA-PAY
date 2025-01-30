@@ -38,13 +38,24 @@ export default function FileUpload({ onFileUpload }: FileUploadProps) {
     }
 
     try {
-      const url = URL.createObjectURL(file);
-      // Pour l'instant, on envoie juste le texte vide car nous n'utilisons plus pdfjsLib ici
-      onFileUpload(url, '');
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch('/api/upload-pdf', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de l\'upload');
+      }
+
+      const data = await response.json();
+      onFileUpload(data.url, ''); // Le texte sera géré plus tard si nécessaire
     } catch (error) {
       toast({
         title: "Erreur",
-        description: "Impossible de charger le fichier PDF",
+        description: "Impossible de télécharger le fichier PDF",
         variant: "destructive"
       });
     }
