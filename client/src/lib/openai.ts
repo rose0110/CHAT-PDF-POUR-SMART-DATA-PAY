@@ -38,11 +38,16 @@ export async function analyzeDocument(
     }
   ];
 
+  const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
+  if (!apiKey) {
+    throw new Error('La clé API OpenAI n\'est pas configurée. Veuillez contacter l\'administrateur.');
+  }
+
   try {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${import.meta.env.VITE_OPENAI_API_KEY}`,
+        'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
@@ -56,7 +61,13 @@ export async function analyzeDocument(
 
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`Erreur lors de la communication avec l'API OpenAI: ${errorText}`);
+      console.error('Réponse OpenAI:', errorText);
+
+      if (response.status === 401) {
+        throw new Error('La clé API OpenAI est invalide ou expirée. Veuillez vérifier votre configuration.');
+      }
+
+      throw new Error(`Erreur lors de la communication avec l'API OpenAI (${response.status}): ${errorText}`);
     }
 
     const data = await response.json();
