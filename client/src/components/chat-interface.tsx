@@ -104,7 +104,7 @@ export default function ChatInterface({ pdfText, paragraphs, enabled, pdfViewerR
   return (
     <Card className="h-screen flex flex-col">
       <div className="p-4 border-b bg-muted/50">
-        <h2 className="text-lg font-semibold">Chat avec le PDF</h2>
+        <h2 className="text-lg font-semibold" style={{ color: '#42D80F' }}>Chat avec le PDF</h2>
         <p className="text-sm text-muted-foreground">
           Posez des questions sur le contenu du document
         </p>
@@ -125,7 +125,7 @@ export default function ChatInterface({ pdfText, paragraphs, enabled, pdfViewerR
               <div
                 className={`max-w-[80%] rounded-lg p-3 ${
                   message.role === 'user'
-                    ? 'bg-primary text-primary-foreground'
+                    ? 'bg-[#42D80F] text-white'
                     : 'bg-muted'
                 }`}
               >
@@ -134,7 +134,7 @@ export default function ChatInterface({ pdfText, paragraphs, enabled, pdfViewerR
                   components={{
                     a: ({ href, children }) => {
                       if (href?.startsWith('#p-')) {
-                        const paragraphIndex = parseInt(href.replace('#p-', ''));
+                        const paragraphIndex = parseInt(href.replace('#p-', '')) || 0;
                         return (
                           <button
                             onClick={() => handleParagraphClick(paragraphIndex)}
@@ -147,7 +147,7 @@ export default function ChatInterface({ pdfText, paragraphs, enabled, pdfViewerR
                       return <a href={href}>{children}</a>;
                     },
                     blockquote: ({ children }) => (
-                      <blockquote className="border-l-4 border-primary/20 pl-4 italic my-2">
+                      <blockquote className="border-l-4 border-[#42D80F]/20 pl-4 italic my-2">
                         {children}
                       </blockquote>
                     )
@@ -161,7 +161,7 @@ export default function ChatInterface({ pdfText, paragraphs, enabled, pdfViewerR
           {mutation.isPending && (
             <div className="flex justify-start">
               <div className="bg-muted rounded-lg p-3 flex items-center gap-2">
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" style={{ color: '#42D80F' }} />
                 <span>L'assistant réfléchit...</span>
               </div>
             </div>
@@ -176,11 +176,12 @@ export default function ChatInterface({ pdfText, paragraphs, enabled, pdfViewerR
             onChange={(e) => setInput(e.target.value)}
             placeholder={enabled ? "Posez votre question..." : "Chargez un PDF d'abord"}
             disabled={!enabled || mutation.isPending}
+            className="focus-visible:ring-[#42D80F]"
           />
           <Button 
             type="submit" 
             disabled={!enabled || mutation.isPending}
-            className="min-w-[40px]"
+            className="min-w-[40px] bg-[#42D80F] hover:bg-[#42D80F]/90"
           >
             {mutation.isPending ? (
               <Loader2 className="h-4 w-4 animate-spin" />
