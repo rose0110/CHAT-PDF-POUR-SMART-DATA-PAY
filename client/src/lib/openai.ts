@@ -51,7 +51,7 @@ export async function analyzeDocument(
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: "gpt-4-turbo-preview",
+        model: "gpt-4O-mini",
         messages,
         temperature: 0.2,
         max_tokens: 1000,

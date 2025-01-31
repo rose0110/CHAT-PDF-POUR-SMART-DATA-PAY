@@ -17,13 +17,20 @@ interface Message {
   citations?: Citation[];
 }
 
+interface Paragraph {
+  text: string;
+  page: number;
+  index: number;
+}
+
 interface ChatInterfaceProps {
   pdfText: string;
+  paragraphs: Paragraph[];
   enabled: boolean;
   pdfViewerRef: React.RefObject<PdfViewerRef>;
 }
 
-export default function ChatInterface({ pdfText, enabled, pdfViewerRef }: ChatInterfaceProps) {
+export default function ChatInterface({ pdfText, paragraphs, enabled, pdfViewerRef }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -37,10 +44,19 @@ export default function ChatInterface({ pdfText, enabled, pdfViewerRef }: ChatIn
       })));
     },
     onSuccess: (data) => {
-      // Formater le contenu pour inclure les citations avec markdown
-      const formattedContent = data.content + "\n\n" + (data.citations?.map(citation => 
-        `> 📄 [Page ${citation.page}](#page-${citation.page})\n> ${citation.text}`
-      ).join("\n\n") || "");
+      // Recherche des paragraphes correspondants aux citations
+      const citationsWithParagraphs = data.citations?.map(citation => {
+        const relevantParagraph = paragraphs.find(p => p.page === citation.page && p.text.includes(citation.text));
+        return {
+          ...citation,
+          paragraphIndex: relevantParagraph?.index
+        };
+      }) || [];
+
+      // Formater le contenu avec les citations et les liens vers les paragraphes
+      const formattedContent = data.content + "\n\n" + citationsWithParagraphs.map(citation => 
+        `> 📄 [Paragraphe ${citation.paragraphIndex + 1} (Page ${citation.page})](#p-${citation.paragraphIndex})\n> ${citation.text}`
+      ).join("\n\n");
 
       setMessages(prev => [...prev, 
         { role: 'user', content: input },
@@ -67,13 +83,14 @@ export default function ChatInterface({ pdfText, enabled, pdfViewerRef }: ChatIn
     mutation.mutate(input);
   };
 
-  const handleCitationClick = (page: number) => {
-    if (pdfViewerRef.current) {
-      pdfViewerRef.current.jumpToPage(page);
+  const handleParagraphClick = (paragraphIndex: number) => {
+    if (pdfViewerRef.current && paragraphIndex >= 0 && paragraphIndex < paragraphs.length) {
+      const paragraph = paragraphs[paragraphIndex];
+      pdfViewerRef.current.jumpToPage(paragraph.page);
+      // TODO: Implémenter le scroll vers le paragraphe spécifique une fois la page chargée
     }
   };
 
-  // Scroll to bottom when new messages arrive
   useEffect(() => {
     if (scrollAreaRef.current) {
       const scrollArea = scrollAreaRef.current;
@@ -113,19 +130,24 @@ export default function ChatInterface({ pdfText, enabled, pdfViewerRef }: ChatIn
                   remarkPlugins={[remarkGfm]}
                   components={{
                     a: ({ href, children }) => {
-                      if (href?.startsWith('#page-')) {
-                        const page = parseInt(href.replace('#page-', ''));
+                      if (href?.startsWith('#p-')) {
+                        const paragraphIndex = parseInt(href.replace('#p-', ''));
                         return (
                           <button
-                            onClick={() => handleCitationClick(page)}
-                            className="text-blue-500 hover:text-blue-700 underline cursor-pointer"
+                            onClick={() => handleParagraphClick(paragraphIndex)}
+                            className="text-blue-500 hover:text-blue-700 underline cursor-pointer inline-flex items-center gap-1"
                           >
                             {children}
                           </button>
                         );
                       }
                       return <a href={href}>{children}</a>;
-                    }
+                    },
+                    blockquote: ({ children }) => (
+                      <blockquote className="border-l-4 border-primary/20 pl-4 italic my-2">
+                        {children}
+                      </blockquote>
+                    )
                   }}
                 >
                   {message.content}

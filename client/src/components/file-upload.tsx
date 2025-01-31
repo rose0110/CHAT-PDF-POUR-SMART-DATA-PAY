@@ -4,7 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import { extractTextFromPdf } from '@/lib/pdf-utils';
 
 interface FileUploadProps {
-  onFileUpload: (url: string, text: string) => void;
+  onFileUpload: (url: string, text: string, paragraphs: Array<{ text: string; page: number; index: number }>) => void;
 }
 
 // Taille maximale du fichier en Mo
@@ -53,9 +53,9 @@ export default function FileUpload({ onFileUpload }: FileUploadProps) {
 
       const data = await response.json();
 
-      // Extraction du texte du PDF
-      const { text } = await extractTextFromPdf(data.url);
-      onFileUpload(data.url, text);
+      // Extraction du texte et des paragraphes du PDF
+      const { text, paragraphs } = await extractTextFromPdf(data.url);
+      onFileUpload(data.url, text, paragraphs);
 
       toast({
         title: "PDF téléchargé avec succès",

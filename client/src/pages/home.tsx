@@ -5,9 +5,16 @@ import { useState, useRef } from "react";
 import FileUpload from "@/components/file-upload";
 import { Card } from "@/components/ui/card";
 
+interface Paragraph {
+  text: string;
+  page: number;
+  index: number;
+}
+
 export default function Home() {
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [pdfText, setPdfText] = useState<string>("");
+  const [paragraphs, setParagraphs] = useState<Paragraph[]>([]);
   const pdfViewerRef = useRef<PdfViewerRef>(null);
 
   return (
@@ -15,9 +22,10 @@ export default function Home() {
       <ResizablePanelGroup direction="horizontal">
         <ResizablePanel defaultSize={50} minSize={30}>
           <div className="h-screen p-4 flex flex-col gap-4">
-            <FileUpload onFileUpload={(url, text) => {
+            <FileUpload onFileUpload={(url, text, newParagraphs) => {
               setPdfUrl(url);
               setPdfText(text);
+              setParagraphs(newParagraphs);
             }} />
             {pdfUrl ? (
               <PdfViewer url={pdfUrl} ref={pdfViewerRef} />
@@ -34,6 +42,7 @@ export default function Home() {
         <ResizablePanel defaultSize={50} minSize={30}>
           <ChatInterface 
             pdfText={pdfText} 
+            paragraphs={paragraphs}
             enabled={!!pdfUrl}
             pdfViewerRef={pdfViewerRef}
           />
