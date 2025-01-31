@@ -14,13 +14,10 @@ interface OpenAIResponse {
 }
 
 function findRelevantParagraphs(question: string, paragraphs: Array<{ text: string; page: number }>, maxParagraphs = 5): Array<{ text: string; page: number }> {
-  // Convertir la question en minuscules pour la comparaison
   const questionTerms = question.toLowerCase().split(/\s+/);
 
-  // Calculer un score de pertinence pour chaque paragraphe
   const scoredParagraphs = paragraphs.map(paragraph => {
     const text = paragraph.text.toLowerCase();
-    // Compter combien de termes de la question apparaissent dans le paragraphe
     const matchingTerms = questionTerms.filter(term => text.includes(term));
     return {
       ...paragraph,
@@ -28,7 +25,6 @@ function findRelevantParagraphs(question: string, paragraphs: Array<{ text: stri
     };
   });
 
-  // Trier par score et prendre les N paragraphes les plus pertinents
   return scoredParagraphs
     .sort((a, b) => b.score - a.score)
     .slice(0, maxParagraphs)
