@@ -19,37 +19,39 @@ export default function Home() {
   const pdfViewerRef = useRef<PdfViewerRef>(null);
 
   return (
-    <div className="h-screen w-full bg-background">
-      <ResizablePanelGroup direction="horizontal">
-        <ResizablePanel defaultSize={50} minSize={30}>
-          <div className="h-screen p-4 flex flex-col gap-4">
-            <GDPRBanner />
-            <FileUpload onFileUpload={(url, text, newParagraphs) => {
-              setPdfUrl(url);
-              setPdfText(text);
-              setParagraphs(newParagraphs);
-            }} />
-            {pdfUrl ? (
-              <PdfViewer url={pdfUrl} ref={pdfViewerRef} />
-            ) : (
-              <Card className="flex-1 flex items-center justify-center text-muted-foreground">
-                Chargez un PDF pour commencer
-              </Card>
-            )}
-          </div>
-        </ResizablePanel>
+    <div className="flex flex-col h-screen w-full bg-background">
+      <GDPRBanner />
+      <div className="flex-1">
+        <ResizablePanelGroup direction="horizontal">
+          <ResizablePanel defaultSize={50} minSize={30}>
+            <div className="h-full p-4 flex flex-col gap-4">
+              <FileUpload onFileUpload={(url, text, newParagraphs) => {
+                setPdfUrl(url);
+                setPdfText(text);
+                setParagraphs(newParagraphs);
+              }} />
+              {pdfUrl ? (
+                <PdfViewer url={pdfUrl} ref={pdfViewerRef} />
+              ) : (
+                <Card className="flex-1 flex items-center justify-center text-muted-foreground">
+                  Chargez un PDF pour commencer
+                </Card>
+              )}
+            </div>
+          </ResizablePanel>
 
-        <ResizableHandle />
+          <ResizableHandle />
 
-        <ResizablePanel defaultSize={50} minSize={30}>
-          <ChatInterface 
-            pdfText={pdfText} 
-            paragraphs={paragraphs}
-            enabled={!!pdfUrl}
-            pdfViewerRef={pdfViewerRef}
-          />
-        </ResizablePanel>
-      </ResizablePanelGroup>
+          <ResizablePanel defaultSize={50} minSize={30}>
+            <ChatInterface 
+              pdfText={pdfText} 
+              paragraphs={paragraphs}
+              enabled={!!pdfUrl}
+              pdfViewerRef={pdfViewerRef}
+            />
+          </ResizablePanel>
+        </ResizablePanelGroup>
+      </div>
     </div>
   );
 }

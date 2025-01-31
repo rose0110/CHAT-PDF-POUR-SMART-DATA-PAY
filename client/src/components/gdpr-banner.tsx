@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 
 const EUFlag = () => (
-  <svg width="40" height="30" viewBox="0 0 810 540">
+  <svg width="24" height="16" viewBox="0 0 810 540">
     <rect fill="#003399" width="810" height="540"/>
     <g fill="#FFCC00">
       {[...Array(12)].map((_, i) => (
@@ -17,18 +17,16 @@ const EUFlag = () => (
 
 export default function GDPRBanner() {
   return (
-    <Card className="bg-white/95 backdrop-blur-sm p-4 mb-4 flex items-center gap-4">
-      <div className="flex-shrink-0">
+    <div className="bg-white/95 backdrop-blur-sm border-b w-full py-2 px-4 sticky top-0 z-50">
+      <div className="max-w-screen-2xl mx-auto flex items-center gap-3" style={{ fontFamily: 'Figtree, sans-serif' }}>
         <EUFlag />
-      </div>
-      <div className="flex-grow">
-        <h3 className="font-semibold text-sm mb-1">Application conforme au RGPD 🔒</h3>
-        <p className="text-sm text-muted-foreground">
-          Cette application respecte votre vie privée : vos documents PDF restent en local sur votre appareil, 
-          aucune donnée personnelle n'est stockée sur nos serveurs. Vous gardez le contrôle total de vos documents.
-          Idéal pour analyser en toute sécurité vos contrats, documents légaux et autres fichiers confidentiels.
+        <p className="text-sm">
+          <span className="font-semibold mr-1" style={{ color: '#42D80F' }}>Application conforme au RGPD 🔒</span>
+          <span className="text-muted-foreground">
+            Vos documents PDF restent en local sur votre appareil - Idéal pour analyser en toute sécurité vos contrats et documents confidentiels
+          </span>
         </p>
       </div>
-    </Card>
+    </div>
   );
 }
