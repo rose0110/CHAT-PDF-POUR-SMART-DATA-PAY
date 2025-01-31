@@ -1,4 +1,6 @@
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { useState } from "react";
 
 const EUFlag = () => (
   <svg width="24" height="16" viewBox="0 0 810 540">
@@ -16,16 +18,46 @@ const EUFlag = () => (
 );
 
 export default function GDPRBanner() {
+  const [expanded, setExpanded] = useState(false);
+
   return (
     <div className="bg-white/95 backdrop-blur-sm border-b w-full py-2 px-4 sticky top-0 z-50">
-      <div className="max-w-screen-2xl mx-auto flex items-center gap-3" style={{ fontFamily: 'Figtree, sans-serif' }}>
+      <div className="max-w-screen-2xl mx-auto flex items-start gap-3" style={{ fontFamily: 'Figtree, sans-serif' }}>
         <EUFlag />
-        <p className="text-sm">
-          <span className="font-semibold mr-1" style={{ color: '#42D80F' }}>Application conforme au RGPD 🔒</span>
-          <span className="text-muted-foreground">
-            Vos documents PDF restent en local sur votre appareil - Idéal pour analyser en toute sécurité vos contrats et documents confidentiels
-          </span>
-        </p>
+        <div className="flex-1">
+          <div className="flex items-center gap-2">
+            <span className="font-semibold mr-1" style={{ color: '#42D80F' }}>Application conforme au RGPD 🔒</span>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => setExpanded(!expanded)}
+              className="text-xs"
+            >
+              {expanded ? 'Voir moins' : 'En savoir plus'}
+            </Button>
+          </div>
+
+          {expanded ? (
+            <div className="mt-2 text-sm space-y-2 text-muted-foreground">
+              <p>
+                <strong>Stockage local :</strong> Les documents PDF sont d'abord chargés localement pour la visualisation.
+              </p>
+              <p>
+                <strong>Service d'analyse :</strong> Pour l'analyse intelligente, nous utilisons ChatPDF qui :
+                - Stocke temporairement les documents pour l'analyse
+                - Supprime automatiquement les données après 24h
+                - Ne partage pas vos données avec des tiers
+              </p>
+              <p>
+                <strong>Vos droits :</strong> Vous pouvez supprimer vos documents à tout moment. Les fichiers sont automatiquement supprimés à la fermeture de l'application.
+              </p>
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              Vos documents PDF sont traités localement et temporairement via ChatPDF pour l'analyse - Idéal pour vos documents confidentiels
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );
