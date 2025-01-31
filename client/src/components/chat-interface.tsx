@@ -38,13 +38,17 @@ export default function ChatInterface({ pdfText, paragraphs, enabled, pdfViewerR
 
   const mutation = useMutation({
     mutationFn: async (question: string) => {
-      return analyzeDocument(question, pdfText, messages.map(msg => ({
-        role: msg.role,
-        content: msg.content
-      })));
+      return analyzeDocument(
+        question, 
+        pdfText, 
+        messages.map(msg => ({
+          role: msg.role,
+          content: msg.content
+        })),
+        paragraphs
+      );
     },
     onSuccess: (data) => {
-      // Recherche des paragraphes correspondants aux citations
       const citationsWithParagraphs = data.citations?.map(citation => {
         const relevantParagraph = paragraphs.find(p => p.page === citation.page && p.text.includes(citation.text));
         return {
@@ -53,7 +57,6 @@ export default function ChatInterface({ pdfText, paragraphs, enabled, pdfViewerR
         };
       }) || [];
 
-      // Formater le contenu avec les citations et les liens vers les paragraphes
       const formattedContent = data.content + "\n\n" + citationsWithParagraphs.map(citation => 
         `> 📄 [Paragraphe ${citation.paragraphIndex + 1} (Page ${citation.page})](#p-${citation.paragraphIndex})\n> ${citation.text}`
       ).join("\n\n");

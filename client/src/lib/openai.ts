@@ -13,25 +13,52 @@ interface OpenAIResponse {
   citations: Citation[];
 }
 
+function findRelevantParagraphs(question: string, paragraphs: Array<{ text: string; page: number }>, maxParagraphs = 5): Array<{ text: string; page: number }> {
+  // Convertir la question en minuscules pour la comparaison
+  const questionTerms = question.toLowerCase().split(/\s+/);
+
+  // Calculer un score de pertinence pour chaque paragraphe
+  const scoredParagraphs = paragraphs.map(paragraph => {
+    const text = paragraph.text.toLowerCase();
+    // Compter combien de termes de la question apparaissent dans le paragraphe
+    const matchingTerms = questionTerms.filter(term => text.includes(term));
+    return {
+      ...paragraph,
+      score: matchingTerms.length / questionTerms.length
+    };
+  });
+
+  // Trier par score et prendre les N paragraphes les plus pertinents
+  return scoredParagraphs
+    .sort((a, b) => b.score - a.score)
+    .slice(0, maxParagraphs)
+    .map(({ text, page }) => ({ text, page }));
+}
+
 export async function analyzeDocument(
   question: string,
   pdfText: string,
-  previousMessages: Message[]
+  previousMessages: Message[],
+  paragraphs: Array<{ text: string; page: number }>
 ): Promise<OpenAIResponse> {
+  // Sélectionner les paragraphes les plus pertinents
+  const relevantParagraphs = findRelevantParagraphs(question, paragraphs);
+
   const messages = [
     {
       role: "system",
       content: `Tu es un assistant spécialisé dans l'analyse de documents PDF.
-                Voici le contenu du PDF : ${pdfText}
+                Voici les extraits pertinents du PDF pour répondre à la question :
+                ${relevantParagraphs.map(p => `[Page ${p.page}] : ${p.text}`).join('\n\n')}
 
                 Règles à suivre :
-                1. Utilise uniquement les informations du PDF fourni
-                2. Si la réponse n'est pas dans le PDF, dis-le clairement
-                3. Cite les passages pertinents du PDF en indiquant les numéros de page
+                1. Utilise uniquement les informations des extraits fournis
+                2. Si la réponse n'est pas dans les extraits, dis-le clairement
+                3. Cite les passages pertinents en indiquant les numéros de page
                 4. Format des citations : "page X: [texte cité]"
                 5. Sois concis et précis dans tes réponses`
     },
-    ...previousMessages,
+    ...previousMessages.slice(-3), // Garder seulement les 3 derniers messages pour le contexte
     {
       role: "user",
       content: question
