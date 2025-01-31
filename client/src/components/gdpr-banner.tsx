@@ -22,11 +22,13 @@ export default function GDPRBanner() {
 
   return (
     <div className="bg-white/95 backdrop-blur-sm border-b w-full py-2 px-4 sticky top-0 z-50">
-      <div className="max-w-screen-2xl mx-auto flex items-start gap-3" style={{ fontFamily: 'Figtree, sans-serif' }}>
-        <EUFlag />
+      <div className="max-w-screen-2xl mx-auto flex items-center gap-3" style={{ fontFamily: 'Figtree, sans-serif' }}>
+        <div className="flex items-center">
+          <EUFlag />
+        </div>
         <div className="flex-1">
           <div className="flex items-center gap-2">
-            <span className="font-semibold mr-1" style={{ color: '#42D80F' }}>Application conforme au RGPD 🔒</span>
+            <span className="font-semibold mr-1" style={{ color: '#42D80F' }}>Application sécurisée 🔒</span>
             <Button 
               variant="ghost" 
               size="sm" 
@@ -40,21 +42,21 @@ export default function GDPRBanner() {
           {expanded ? (
             <div className="mt-2 text-sm space-y-2 text-muted-foreground">
               <p>
-                <strong>Stockage local :</strong> Les documents PDF sont d'abord chargés localement pour la visualisation.
+                <strong>Protection de vos données :</strong> Vos documents sont traités en toute sécurité, avec un stockage temporaire limité à la durée de votre session.
               </p>
               <p>
-                <strong>Service d'analyse :</strong> Pour l'analyse intelligente, nous utilisons ChatPDF qui :
-                - Stocke temporairement les documents pour l'analyse
-                - Supprime automatiquement les données après 24h
-                - Ne partage pas vos données avec des tiers
+                <strong>Analyse sécurisée :</strong> L'analyse de vos documents est effectuée via des services sécurisés qui :
+                - Ne conservent pas vos données au-delà de 24h
+                - N'utilisent pas vos données à d'autres fins
+                - Respectent les normes de sécurité européennes
               </p>
               <p>
-                <strong>Vos droits :</strong> Vous pouvez supprimer vos documents à tout moment. Les fichiers sont automatiquement supprimés à la fermeture de l'application.
+                <strong>Vos droits :</strong> Vous gardez le contrôle total de vos données et pouvez demander leur suppression à tout moment.
               </p>
             </div>
           ) : (
             <p className="text-sm text-muted-foreground">
-              Vos documents PDF sont traités localement et temporairement via ChatPDF pour l'analyse - Idéal pour vos documents confidentiels
+              Vos documents sont traités de manière sécurisée et temporaire - Protection maximale de vos données sensibles
             </p>
           )}
         </div>
