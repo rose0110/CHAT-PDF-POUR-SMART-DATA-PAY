@@ -4,6 +4,7 @@ import ChatInterface from "@/components/chat-interface";
 import { useState, useRef } from "react";
 import FileUpload from "@/components/file-upload";
 import { Card } from "@/components/ui/card";
+import GDPRBanner from "@/components/gdpr-banner";
 
 interface Paragraph {
   text: string;
@@ -22,6 +23,7 @@ export default function Home() {
       <ResizablePanelGroup direction="horizontal">
         <ResizablePanel defaultSize={50} minSize={30}>
           <div className="h-screen p-4 flex flex-col gap-4">
+            <GDPRBanner />
             <FileUpload onFileUpload={(url, text, newParagraphs) => {
               setPdfUrl(url);
               setPdfText(text);
