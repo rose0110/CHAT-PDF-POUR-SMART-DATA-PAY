@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Send, Loader2 } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
-import { analyzeDocument, type Citation } from '@/lib/openai';
+import { chatWithPDF, type Citation } from '@/lib/chatpdf';
 import { useToast } from '@/hooks/use-toast';
 import type { PdfViewerRef } from './pdf-viewer';
 import ReactMarkdown from 'react-markdown';
@@ -24,13 +24,12 @@ interface Paragraph {
 }
 
 interface ChatInterfaceProps {
-  pdfText: string;
-  paragraphs: Paragraph[];
+  sourceId: string;
   enabled: boolean;
   pdfViewerRef: React.RefObject<PdfViewerRef>;
 }
 
-export default function ChatInterface({ pdfText, paragraphs, enabled, pdfViewerRef }: ChatInterfaceProps) {
+export default function ChatInterface({ sourceId, enabled, pdfViewerRef }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -38,34 +37,21 @@ export default function ChatInterface({ pdfText, paragraphs, enabled, pdfViewerR
 
   const mutation = useMutation({
     mutationFn: async (question: string) => {
-      return analyzeDocument(
-        question, 
-        pdfText, 
+      return chatWithPDF(
+        sourceId,
+        question,
         messages.map(msg => ({
           role: msg.role,
           content: msg.content
-        })),
-        paragraphs
+        }))
       );
     },
     onSuccess: (data) => {
-      const citationsWithParagraphs = data.citations?.map(citation => {
-        const relevantParagraph = paragraphs.find(p => p.page === citation.page && p.text.includes(citation.text));
-        return {
-          ...citation,
-          paragraphIndex: relevantParagraph?.index
-        };
-      }) || [];
-
-      const formattedContent = data.content + "\n\n" + citationsWithParagraphs.map(citation => 
-        `> 📄 [Paragraphe ${citation.paragraphIndex + 1} (Page ${citation.page})](#p-${citation.paragraphIndex})\n> ${citation.text}`
-      ).join("\n\n");
-
       setMessages(prev => [...prev, 
         { role: 'user', content: input },
         { 
           role: 'assistant', 
-          content: formattedContent,
+          content: data.content,
           citations: data.citations
         }
       ]);
@@ -86,11 +72,9 @@ export default function ChatInterface({ pdfText, paragraphs, enabled, pdfViewerR
     mutation.mutate(input);
   };
 
-  const handleParagraphClick = (paragraphIndex: number) => {
-    if (pdfViewerRef.current && paragraphIndex >= 0 && paragraphIndex < paragraphs.length) {
-      const paragraph = paragraphs[paragraphIndex];
-      pdfViewerRef.current.jumpToPage(paragraph.page);
-      // TODO: Implémenter le scroll vers le paragraphe spécifique une fois la page chargée
+  const handleParagraphClick = (pageNumber: number) => {
+    if (pdfViewerRef.current) {
+      pdfViewerRef.current.jumpToPage(pageNumber);
     }
   };
 
@@ -134,15 +118,17 @@ export default function ChatInterface({ pdfText, paragraphs, enabled, pdfViewerR
                   components={{
                     a: ({ href, children }) => {
                       if (href?.startsWith('#p-')) {
-                        const paragraphIndex = parseInt(href.replace('#p-', '')) || 0;
-                        return (
-                          <button
-                            onClick={() => handleParagraphClick(paragraphIndex)}
-                            className="text-blue-500 hover:text-blue-700 underline cursor-pointer inline-flex items-center gap-1"
-                          >
-                            {children}
-                          </button>
-                        );
+                        const pageNumber = parseInt(href.replace('#p-', ''));
+                        if (!isNaN(pageNumber)) {
+                          return (
+                            <button
+                              onClick={() => handleParagraphClick(pageNumber)}
+                              className="text-blue-500 hover:text-blue-700 underline cursor-pointer inline-flex items-center gap-1"
+                            >
+                              {children}
+                            </button>
+                          );
+                        }
                       }
                       return <a href={href}>{children}</a>;
                     },

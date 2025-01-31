@@ -2,9 +2,10 @@ import { Button } from '@/components/ui/button';
 import { Upload } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { extractTextFromPdf } from '@/lib/pdf-utils';
+import { uploadPdfToChatPDF } from '@/lib/chatpdf';
 
 interface FileUploadProps {
-  onFileUpload: (url: string, text: string, paragraphs: Array<{ text: string; page: number; index: number }>) => void;
+  onFileUpload: (url: string, sourceId: string, text: string, paragraphs: Array<{ text: string; page: number; index: number }>) => void;
 }
 
 // Taille maximale du fichier en Mo
@@ -39,6 +40,7 @@ export default function FileUpload({ onFileUpload }: FileUploadProps) {
     }
 
     try {
+      // Upload le fichier pour la visualisation
       const formData = new FormData();
       formData.append('file', file);
 
@@ -53,15 +55,20 @@ export default function FileUpload({ onFileUpload }: FileUploadProps) {
 
       const data = await response.json();
 
-      // Extraction du texte et des paragraphes du PDF
+      // Upload vers ChatPDF
+      const sourceId = await uploadPdfToChatPDF(file);
+
+      // Extraction du texte pour la visualisation
       const { text, paragraphs } = await extractTextFromPdf(data.url);
-      onFileUpload(data.url, text, paragraphs);
+
+      onFileUpload(data.url, sourceId, text, paragraphs);
 
       toast({
         title: "PDF téléchargé avec succès",
-        description: "Le texte a été extrait et est prêt pour l'analyse",
+        description: "Le document est prêt pour l'analyse",
       });
     } catch (error) {
+      console.error('Erreur upload:', error);
       toast({
         title: "Erreur",
         description: "Impossible de télécharger ou d'extraire le texte du PDF",
